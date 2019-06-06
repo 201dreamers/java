@@ -6,7 +6,7 @@ import java.util.*;
 public class CustomSet implements Set<MusicTrack>{
 
     private static final int START_CAPACITY = 15;
-    private static final int MIN_TRACK_TIME_LENGTH = 10;
+    private static final int MIN_TRACK_TIME_LENGTH = 1;
     private int capacity = (int)(START_CAPACITY*1.3);
     private int currentCapacity;
     private boolean isExtended = false;
@@ -26,13 +26,15 @@ public class CustomSet implements Set<MusicTrack>{
         addAll(collection);
     }
 
-    public void extend(){
+    public int extend(){
         MusicTrack[] buff = elements;
         elements = new MusicTrack[capacity];
         for(int i = 0; i < buff.length; i++) elements[i] = buff[i];
         currentCapacity = capacity;
         capacity = (int)(currentCapacity*1.3);
         isExtended = true;
+
+        return capacity;
     }
 
     @Override
@@ -81,7 +83,6 @@ public class CustomSet implements Set<MusicTrack>{
     @Override
     public <T> T[] toArray(T[] ts) {
         if (ts.length < size)
-            // Make a new array of a's runtime type, but my contents:
             return (T[]) Arrays.copyOf(elements, size, ts.getClass());
         System.arraycopy(elements, 0, ts, 0, size);
         if (ts.length > size)
@@ -117,12 +118,17 @@ public class CustomSet implements Set<MusicTrack>{
 
     @Override
     public boolean containsAll(Collection<?> collection) {
-        boolean hasAll = true;
-        label1 : for (MusicTrack elem : elements) {
-            for(Object mt : collection){
-                if (elem.equals(mt)) continue label1;
+        boolean hasAll = false;
+        /*label1 :*/
+        for(Object mt : collection){
+            for (MusicTrack elem : elements) {
+                if (elem != null && mt.equals(elem)) {
+                    hasAll = true;
+                    break;
+                }//continue label1;
                 hasAll = false;
             }
+            continue;
         }
         return hasAll;
     }
@@ -145,10 +151,22 @@ public class CustomSet implements Set<MusicTrack>{
 
     @Override
     public boolean retainAll(Collection<?> collection) {
-        int i = size;
-        for(Iterator it = collection.iterator(); it.hasNext();){
-            Object mt = it.next();
-            if (mt instanceof MusicTrack && !(elements[i].equals(mt))) elements[i++] = null;
+        try {
+            for (Iterator it = collection.iterator(); it.hasNext(); ) {
+                Object mt = it.next();
+                if (mt.equals(null)) continue;
+                for (int j = 0; j < size; j++) {
+                    if (elements[j].equals(null)) continue;
+                    if (mt instanceof MusicTrack && !(elements[j].equals(mt)))
+                        elements[j] = null;
+                }
+
+            }
+        } catch (NullPointerException e){
+            return true;
+        } catch (Exception e){
+            //System.out.println(e.getMessage());
+            return false;
         }
         return true;
     }
@@ -156,17 +174,30 @@ public class CustomSet implements Set<MusicTrack>{
     @Override
     public boolean removeAll(Collection<?> collection) {
         int i = size;
-        for(Iterator it = collection.iterator(); it.hasNext();){
-            Object mt = it.next();
-            if (mt instanceof MusicTrack && elements[i].equals(mt)) elements[i++] = null;
+        try {
+            for (Iterator it = collection.iterator(); it.hasNext(); ) {
+                Object mt = it.next();
+                if (mt instanceof MusicTrack && elements[i].equals(mt)) elements[i++] = null;
+            }
+        } catch (NullPointerException e){
+            return true;
+        } catch (Exception e){
+            //System.out.println("Message - " + e.getMessage());
+            return false;
         }
         return true;
     }
 
     @Override
     public void clear() {
-        for (int i = 0; i < elements.length; i++) {
-            elements[i] = null;
+        try {
+            for (int i = 0; i < elements.length; i++) {
+                elements[i] = null;
+            }
+        } catch (NullPointerException e){
+            System.out.println(e.getMessage());
+        } catch (Exception e){
+            System.out.println(e.getMessage());
         }
     }
 
